@@ -1,30 +1,1466 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
 <head>
-<title>Ephemeral Delhi</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Ephemeral Delhi — Digital Humanities Archive</title>
+  <meta name="description" content="Ephemeral Delhi: A Digital Humanities Archive of Temporary Architecture in Delhi." />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+  <!-- Leaflet (Map) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+  <style>
+    :root{
+      --bg0:#070A12;
+      --bg1:#0B1330;
+      --card: rgba(255,255,255,.06);
+      --card2: rgba(255,255,255,.09);
+      --stroke: rgba(255,255,255,.14);
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.66);
+      --muted2: rgba(255,255,255,.45);
+      --accent:#78F7D2;
+      --accent2:#A78BFA;
+      --accent3:#F97316;
+      --danger:#FB7185;
+      --ok:#34D399;
+      --shadow: 0 20px 60px rgba(0,0,0,.45);
+      --radius: 18px;
+      --radius2: 26px;
+      --ring: 0 0 0 4px rgba(120,247,210,.18);
+      --ring2: 0 0 0 4px rgba(167,139,250,.18);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body{
+      margin:0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(1200px 600px at 15% 10%, rgba(120,247,210,.18), transparent 55%),
+        radial-gradient(900px 500px at 80% 20%, rgba(167,139,250,.18), transparent 52%),
+        radial-gradient(1200px 700px at 50% 80%, rgba(249,115,22,.10), transparent 58%),
+        linear-gradient(180deg, var(--bg0), var(--bg1));
+      overflow-x:hidden;
+    }
+
+    a{ color: inherit; text-decoration: none; }
+    .wrap{
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 22px 18px 90px;
+    }
+
+    /* Top bar */
+    .topbar{
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(10px);
+      background: linear-gradient(180deg, rgba(7,10,18,.70), rgba(7,10,18,.35));
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+    .topbarInner{
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 14px 18px;
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+    .brand{
+      display:flex; align-items:center; gap:12px;
+      min-width: 260px;
+    }
+    .logo{
+      width: 42px; height: 42px;
+      border-radius: 14px;
+      background:
+        radial-gradient(circle at 25% 30%, rgba(120,247,210,.95), rgba(120,247,210,.10) 55%),
+        radial-gradient(circle at 75% 65%, rgba(167,139,250,.95), rgba(167,139,250,.10) 55%),
+        rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.14);
+      box-shadow: 0 18px 40px rgba(0,0,0,.35);
+    }
+    .brand h1{
+      font-size: 13px;
+      line-height: 1.15;
+      margin:0;
+      font-weight: 800;
+      letter-spacing:.2px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.88);
+    }
+    .brand p{
+      margin:0;
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing: .2px;
+    }
+
+    .controls{
+      display:flex;
+      gap: 10px;
+      align-items:center;
+      flex-wrap: wrap;
+      justify-content:flex-end;
+    }
+
+    .search{
+      display:flex; align-items:center; gap:10px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+      min-width: 320px;
+    }
+    .search input{
+      width: 100%;
+      background: transparent;
+      border: 0;
+      outline: none;
+      color: var(--text);
+      font-size: 14px;
+    }
+    .pillRow{
+      display:flex; gap: 8px; flex-wrap: wrap;
+    }
+    .pill{
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      border-radius: 999px;
+      padding: 9px 12px;
+      cursor:pointer;
+      font-size: 13px;
+      color: rgba(255,255,255,.80);
+      transition: transform .15s ease, background .15s ease, border-color .15s ease;
+      user-select:none;
+    }
+    .pill:hover{ transform: translateY(-1px); background: rgba(255,255,255,.085); }
+    .pill[aria-pressed="true"]{
+      background: rgba(120,247,210,.14);
+      border-color: rgba(120,247,210,.36);
+      box-shadow: var(--ring);
+      color: rgba(255,255,255,.92);
+    }
+
+    /* Hero */
+    .hero{
+      margin-top: 18px;
+      display:grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 18px;
+      align-items: stretch;
+    }
+    @media (max-width: 980px){
+      .hero{ grid-template-columns: 1fr; }
+      .search{ min-width: 100%; }
+    }
+
+    .heroLeft{
+      padding: 26px 20px;
+      border-radius: var(--radius2);
+      border: 1px solid rgba(255,255,255,.10);
+      background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.03));
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow:hidden;
+    }
+    .heroLeft:before{
+      content:"";
+      position:absolute; inset:-2px;
+      background:
+        radial-gradient(700px 240px at 10% 10%, rgba(120,247,210,.22), transparent 60%),
+        radial-gradient(700px 240px at 90% 20%, rgba(167,139,250,.20), transparent 62%),
+        radial-gradient(600px 220px at 50% 90%, rgba(249,115,22,.11), transparent 58%);
+      pointer-events:none;
+      filter: blur(6px);
+      opacity: .95;
+    }
+    .heroLeft > *{ position:relative; z-index: 1; }
+
+    .kicker{
+      display:flex; align-items:center; gap:10px; flex-wrap: wrap;
+      color: var(--muted);
+      font-weight:600;
+      letter-spacing:.2px;
+      font-size: 13px;
+    }
+    .dot{
+      width: 10px; height: 10px; border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 0 6px rgba(120,247,210,.16);
+    }
+    .heroTitle{
+      margin: 12px 0 8px;
+      font-family: "Instrument Serif", serif;
+      font-size: 42px;
+      line-height: 1.05;
+      letter-spacing: .2px;
+    }
+    .heroSub{
+      color: rgba(255,255,255,.74);
+      font-size: 15.5px;
+      line-height: 1.65;
+      margin: 0 0 16px;
+      max-width: 64ch;
+    }
+    .ctaRow{
+      display:flex; gap: 10px; flex-wrap: wrap;
+      margin-top: 14px;
+    }
+    .btn{
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      padding: 11px 14px;
+      cursor:pointer;
+      transition: transform .15s ease, background .15s ease, border-color .15s ease;
+      color: rgba(255,255,255,.88);
+      display:flex; align-items:center; gap: 10px;
+      user-select:none;
+    }
+    .btn:hover{ transform: translateY(-1px); background: rgba(255,255,255,.085); }
+    .btnPrimary{
+      background: linear-gradient(135deg, rgba(120,247,210,.18), rgba(167,139,250,.16));
+      border-color: rgba(120,247,210,.26);
+    }
+    .btnPrimary:hover{ border-color: rgba(120,247,210,.42); box-shadow: var(--ring); }
+
+    /* Right side */
+    .heroRight{
+      border-radius: var(--radius2);
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.05);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      position:relative;
+      min-height: 290px;
+    }
+    .memoryStage{
+      position:absolute; inset:0;
+      padding: 18px;
+      display:flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .memoryHeader{
+      display:flex; justify-content: space-between; gap: 10px; align-items:flex-start;
+    }
+    .memoryHeader h3{
+      margin:0;
+      font-size: 14px;
+      letter-spacing: .3px;
+      color: rgba(255,255,255,.86);
+      text-transform: uppercase;
+      font-weight: 800;
+    }
+    .memoryHeader p{
+      margin:0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+      max-width: 26ch;
+      text-align:right;
+    }
+
+    .layerViz{
+      flex: 1;
+      display:flex; align-items:center; justify-content:center;
+      position:relative;
+      border-radius: 18px;
+      border: 1px dashed rgba(255,255,255,.18);
+      background:
+        radial-gradient(600px 200px at 50% 20%, rgba(120,247,210,.14), transparent 60%),
+        radial-gradient(500px 240px at 30% 80%, rgba(167,139,250,.12), transparent 55%);
+      overflow:hidden;
+    }
+    .layerViz canvas{
+      width:100%;
+      height:100%;
+    }
+
+    .sliderRow{
+      display:flex; flex-direction: column; gap: 8px;
+      padding-top: 2px;
+    }
+    .sliderRow label{
+      font-size: 12.5px;
+      color: var(--muted);
+      font-weight: 700;
+      letter-spacing:.2px;
+      display:flex; justify-content: space-between; gap: 10px;
+    }
+    input[type="range"]{
+      width: 100%;
+      accent-color: var(--accent);
+    }
+    .stageTag{
+      display:inline-flex;
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: rgba(255,255,255,.84);
+      font-weight: 800;
+      font-size: 12.5px;
+      letter-spacing: .2px;
+    }
+
+    /* Sections */
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 18px;
+    }
+    @media (max-width: 980px){ .grid{ grid-template-columns: 1fr; } }
+
+    .card{
+      border-radius: var(--radius);
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.05);
+      box-shadow: 0 18px 50px rgba(0,0,0,.25);
+      overflow:hidden;
+    }
+    .cardInner{ padding: 16px; }
+    .cardTitle{
+      margin:0;
+      font-size: 14px;
+      letter-spacing: .25px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.86);
+      font-weight: 850;
+      display:flex; align-items:center; justify-content: space-between; gap: 10px;
+    }
+    .badge{
+      font-size: 12px;
+      color: rgba(255,255,255,.78);
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.12);
+      padding: 6px 10px;
+      border-radius: 999px;
+    }
+
+    /* Map */
+    #map{
+      width:100%;
+      height: 320px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.10);
+      overflow:hidden;
+      margin-top: 12px;
+    }
+
+    /* Exhibit list */
+    .listTools{
+      display:flex; gap: 10px; flex-wrap: wrap; align-items:center; justify-content: space-between;
+      margin-top: 10px;
+    }
+    .smallMuted{ color: var(--muted); font-size: 13px; line-height: 1.4; }
+
+    .chips{
+      display:flex; gap: 8px; flex-wrap: wrap;
+      margin-top: 10px;
+    }
+    .chip{
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      border-radius: 999px;
+      padding: 7px 10px;
+      font-size: 12.5px;
+      color: rgba(255,255,255,.80);
+      user-select:none;
+      cursor:pointer;
+      transition: background .15s ease, border-color .15s ease, transform .15s ease;
+    }
+    .chip:hover{ transform: translateY(-1px); background: rgba(255,255,255,.085); }
+    .chip[aria-pressed="true"]{
+      background: rgba(167,139,250,.14);
+      border-color: rgba(167,139,250,.36);
+      box-shadow: var(--ring2);
+    }
+
+    .cardsGrid{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+    @media (max-width: 980px){ .cardsGrid{ grid-template-columns: 1fr; } }
+
+    .siteCard{
+      padding: 12px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.05);
+      cursor:pointer;
+      transition: transform .15s ease, border-color .15s ease, background .15s ease;
+      position:relative;
+      overflow:hidden;
+    }
+    .siteCard:hover{
+      transform: translateY(-2px);
+      border-color: rgba(255,255,255,.18);
+      background: rgba(255,255,255,.07);
+    }
+    .siteCard:before{
+      content:"";
+      position:absolute; inset:-1px;
+      background: radial-gradient(350px 110px at 20% 0%, rgba(120,247,210,.18), transparent 60%);
+      opacity: 0;
+      transition: opacity .18s ease;
+      pointer-events:none;
+    }
+    .siteCard:hover:before{ opacity: 1; }
+    .siteTop{
+      display:flex; align-items:flex-start; justify-content: space-between; gap: 10px;
+    }
+    .siteName{
+      font-weight: 900;
+      letter-spacing: .15px;
+      margin:0;
+      font-size: 15px;
+      color: rgba(255,255,255,.90);
+    }
+    .siteMeta{
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .catTag{
+      padding: 7px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 850;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+      color: rgba(255,255,255,.86);
+      white-space: nowrap;
+    }
+
+    /* Gallery */
+    .gallery{
+      display:grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+    @media (max-width: 980px){ .gallery{ grid-template-columns: repeat(2, minmax(0,1fr)); } }
+    .thumb{
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+      overflow:hidden;
+      cursor:pointer;
+      transition: transform .15s ease, border-color .15s ease;
+      position:relative;
+      min-height: 110px;
+      display:flex;
+      align-items:flex-end;
+    }
+    .thumb img{
+      width:100%;
+      height:100%;
+      object-fit: cover;
+      display:block;
+      filter: saturate(1.15) contrast(1.05);
+      opacity:.95;
+    }
+    .thumb .cap{
+      position:absolute; left:10px; bottom:10px;
+      right:10px;
+      background: rgba(0,0,0,.35);
+      border: 1px solid rgba(255,255,255,.10);
+      backdrop-filter: blur(6px);
+      padding: 7px 9px;
+      border-radius: 12px;
+      font-size: 12.5px;
+      color: rgba(255,255,255,.92);
+      font-weight: 800;
+      line-height:1.25;
+    }
+
+    /* Modal */
+    .modalOverlay{
+      position: fixed; inset:0;
+      background: rgba(0,0,0,.55);
+      backdrop-filter: blur(8px);
+      display:none;
+      z-index: 1000;
+      padding: 22px;
+    }
+    .modalOverlay[aria-hidden="false"]{ display:flex; }
+    .modal{
+      width: min(980px, 100%);
+      margin:auto;
+      border-radius: 24px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.04));
+      box-shadow: 0 30px 120px rgba(0,0,0,.6);
+      overflow:hidden;
+      position:relative;
+    }
+    .modalHeader{
+      padding: 14px 16px;
+      display:flex; align-items:flex-start; justify-content: space-between; gap: 10px;
+      border-bottom: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+    }
+    .modalHeader h2{
+      margin:0;
+      font-family: "Instrument Serif", serif;
+      font-size: 28px;
+      letter-spacing: .2px;
+    }
+    .modalHeader p{
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 13.5px;
+      line-height:1.4;
+    }
+    .closeBtn{
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: rgba(255,255,255,.90);
+      cursor:pointer;
+      padding: 10px 12px;
+      font-weight: 900;
+      transition: transform .15s ease, background .15s ease;
+      flex: 0 0 auto;
+    }
+    .closeBtn:hover{ transform: translateY(-1px); background: rgba(255,255,255,.085); }
+    .modalBody{
+      padding: 16px;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    @media (max-width: 980px){ .modalBody{ grid-template-columns: 1fr; } }
+    .modalBlock{
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.05);
+      padding: 14px;
+      overflow:hidden;
+    }
+    .modalBlock h3{
+      margin:0;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: .26px;
+      color: rgba(255,255,255,.86);
+    }
+    .modalBlock .content{
+      margin-top: 10px;
+      color: rgba(255,255,255,.80);
+      font-size: 14px;
+      line-height: 1.65;
+    }
+    .kv{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .kv .item{
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+      padding: 10px;
+    }
+    .kv .k{
+      color: var(--muted);
+      font-size: 12.5px;
+      font-weight: 800;
+      letter-spacing:.2px;
+      text-transform: uppercase;
+    }
+    .kv .v{
+      margin-top: 6px;
+      font-size: 13.5px;
+      color: rgba(255,255,255,.88);
+      font-weight: 800;
+      line-height:1.3;
+    }
+
+    /* Footer */
+    footer{
+      margin-top: 26px;
+      color: var(--muted2);
+      font-size: 12.5px;
+      line-height: 1.6;
+    }
+    .kbd{
+      padding: 3px 7px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: rgba(255,255,255,.84);
+      font-weight: 900;
+      font-size: 12px;
+    }
+  </style>
 </head>
 
 <body>
+  <div class="topbar">
+    <div class="topbarInner">
+      <div class="brand" role="banner" aria-label="Project brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <h1>Ephemeral Delhi</h1>
+          <p>Digital Humanities Archive of Temporary Architecture</p>
+        </div>
+      </div>
 
-<nav>
-<a href="index.html">Home</a>
-<a href="gallery.html">Gallery</a>
-<a href="map.html">Map</a>
-<a href="methodology.html">Methodology</a>
-</nav>
+      <div class="controls" aria-label="Global filters">
+        <div class="search" role="search">
+          <span aria-hidden="true">🔎</span>
+          <input id="searchInput" type="search" placeholder="Search sites, tags, materials, symbols..." aria-label="Search" />
+        </div>
 
-<section>
-<h1>Ephemeral Delhi</h1>
-<p>Temporary Architecture as Cultural Performance</p>
+        <div class="pillRow" aria-label="Category filter">
+          <button class="pill" data-cat="all" aria-pressed="true">All</button>
+          <button class="pill" data-cat="religious" aria-pressed="false">Religious</button>
+          <button class="pill" data-cat="social" aria-pressed="false">Social</button>
+          <button class="pill" data-cat="political" aria-pressed="false">Political</button>
+          <button class="pill" data-cat="commercial" aria-pressed="false">Commercial</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
-<div class="card">
-<p>
-This project explores temporary structures in Delhi—pandals, tents, protest stages—
-as cultural texts that reshape urban space and memory.
-</p>
-</div>
-</section>
+  <div class="wrap">
+    <section class="hero" aria-label="Project overview hero">
+      <div class="heroLeft">
+        <div class="kicker">
+          <span class="dot" aria-hidden="true"></span>
+          <span>Temporary structures as cultural texts — mapped, interpreted, and archived.</span>
+        </div>
 
+        <h2 class="heroTitle">Ephemeral Delhi</h2>
+        <p class="heroSub">
+          This interactive DH exhibit documents how temporary architecture in Delhi—pandals, wedding tents, protest stages,
+          and festival markets—briefly transforms public space, performs identity, and leaves behind traces of memory.
+        </p>
+
+        <div class="ctaRow">
+          <button class="btn btnPrimary" id="jumpToSitesBtn" type="button">
+            <span aria-hidden="true">🧭</span> Explore the archive
+          </button>
+          <button class="btn" id="randomPickBtn" type="button" title="Pick a random entry">
+            <span aria-hidden="true">🎲</span> Surprise me
+          </button>
+          <button class="btn" id="toggleGalleryBtn" type="button">
+            <span aria-hidden="true">🖼️</span> Toggle gallery
+          </button>
+        </div>
+      </div>
+
+      <aside class="heroRight" aria-label="Memory layer visualization">
+        <div class="memoryStage">
+          <div class="memoryHeader">
+            <div>
+              <h3>Memory Layers</h3>
+              <div class="smallMuted" style="margin-top:6px;">
+                Slide through the lifecycle: <b>before → during → dismantling</b>.
+              </div>
+            </div>
+            <p>
+              Built to vanish — archived to persist.<br/>
+              <span class="stageTag" id="stageLabel">During</span>
+            </p>
+          </div>
+
+          <div class="layerViz" aria-label="Animated layered visualization">
+            <canvas id="vizCanvas" aria-hidden="true"></canvas>
+          </div>
+
+          <div class="sliderRow">
+            <label for="stageSlider">
+              <span>Lifecycle stage</span>
+              <span class="smallMuted" id="stageValue">0.5</span>
+            </label>
+            <input id="stageSlider" type="range" min="0" max="1" step="0.01" value="0.5" />
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="grid" aria-label="Interactive exhibit grid">
+      <!-- LEFT: Map -->
+      <div class="card">
+        <div class="cardInner">
+          <div class="cardTitle">
+            <span>Interactive Map</span>
+            <span class="badge" id="mapCount">0 pins</span>
+          </div>
+
+          <div class="smallMuted" style="margin-top:10px;">
+            Add your <b>real locations</b> later by editing the demo dataset (site lat/lng).
+            For now, this map demonstrates how your archive can be spatially organized.
+          </div>
+
+          <div id="map" role="application" aria-label="Map of temporary architecture sites"></div>
+          <div class="chips" aria-label="Quick tag filters" id="tagChips"></div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Site cards / filters -->
+      <div class="card">
+        <div class="cardInner">
+          <div class="cardTitle">
+            <span>Archive Browser</span>
+            <span class="badge" id="resultCount">0 results</span>
+          </div>
+
+          <div class="listTools">
+            <div class="smallMuted">
+              Click an entry to open its “cultural text” view.<br/>
+              Tip: press <span class="kbd">Esc</span> to close modal.
+            </div>
+          </div>
+
+          <div class="cardsGrid" id="sitesGrid" aria-label="Site cards"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Gallery (optional toggle) -->
+    <section class="card" style="margin-top:14px;">
+      <div class="cardInner">
+        <div class="cardTitle">
+          <span>Photo & Metadata Gallery</span>
+          <span class="badge" id="galleryCount">0 items</span>
+        </div>
+        <div class="smallMuted" style="margin-top:10px;">
+          Replace demo images with your own. Each thumbnail can be linked to a site entry.
+        </div>
+
+        <div class="gallery" id="galleryGrid" aria-label="Image gallery"></div>
+      </div>
+    </section>
+
+    <footer>
+      <b>How to use:</b> Edit the <span class="kbd">SITES</span> array in the script to add your sites, tags,
+      lifecycle notes, and photo paths (e.g., <span class="kbd">images/site-01.jpg</span>).
+      Enable GitHub Pages and publish.
+      <br/>
+      <br/>
+      <b>Accessibility:</b> Modal supports focus management and <span class="kbd">Esc</span> closing.
+    </footer>
+  </div>
+
+  <!-- Modal -->
+  <div class="modalOverlay" id="modalOverlay" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Site details modal">
+    <div class="modal" role="document">
+      <div class="modalHeader">
+        <div>
+          <h2 id="modalTitle">Site Name</h2>
+          <p id="modalSubtitle">Category • Date • Occasion</p>
+        </div>
+        <button class="closeBtn" id="modalCloseBtn" type="button" aria-label="Close modal">✕</button>
+      </div>
+
+      <div class="modalBody">
+        <div class="modalBlock">
+          <h3>Lifecycle reading</h3>
+          <div class="content" id="modalLifecycleText"></div>
+
+          <div class="kv" aria-label="Key metadata">
+            <div class="item">
+              <div class="k">Type</div>
+              <div class="v" id="modalType"></div>
+            </div>
+            <div class="item">
+              <div class="k">Materials</div>
+              <div class="v" id="modalMaterials"></div>
+            </div>
+            <div class="item">
+              <div class="k">Dominant color</div>
+              <div class="v" id="modalColor"></div>
+            </div>
+            <div class="item">
+              <div class="k">Duration</div>
+              <div class="v" id="modalDuration"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modalBlock">
+          <h3>Cultural symbols & spatial effects</h3>
+          <div class="content" id="modalCulturalText"></div>
+
+          <div style="margin-top:12px;">
+            <h3 style="margin:0; font-size:13px; text-transform:uppercase; letter-spacing:.26px; color:rgba(255,255,255,.86);">Tags</h3>
+            <div class="chips" id="modalTags" aria-label="Tags list" style="margin-top:10px;"></div>
+          </div>
+
+          <div style="margin-top:12px; color: var(--muted); font-size: 13px; line-height:1.5;">
+            <b>Note:</b> This exhibit is a scaffold. When you add your own data, the interface becomes a true archive.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    /***********************
+     * Demo dataset — edit me
+     ***********************/
+    const SITES = [
+      {
+        id: "site-01",
+        name: "Durga Puja Pandal (Central Delhi)",
+        category: "religious",
+        occasion: "Durga Puja",
+        dateLabel: "Oct (annual cycle)",
+        materials: "Bamboo, fabric, thermocol, LEDs",
+        color: "Saffron / Gold accents",
+        duration: "7–10 days",
+        themes: ["Devotion", "Spectacle", "Mythic motifs"],
+        symbols: ["lion motifs", "navratri iconography", "processional lighting"],
+        lifecycle: {
+          before: "Before setup, public space feels transitional—paths widen, lanes clear, and invisible labor begins.",
+          during: "During peak use, the pandal becomes a cultural stage: light architecture gathers attention and choreographs movement.",
+          dismantling: "At dismantling, the city reabsorbs structure—yet photographed traces circulate as temporary memory."
+        },
+        tags: ["religion","festival","lighting","public-space"],
+        lat: 28.6448,
+        lng: 77.2167,
+        gallery: [
+          { src: "images/durga-1.jpg", cap: "During: luminous entrance" },
+          { src: "images/durga-2.jpg", cap: "Materials: bamboo + LEDs" },
+          { src: "images/durga-3.jpg", cap: "Symbolic motifs at night" }
+        ]
+      },
+      {
+        id: "site-02",
+        name: "Wedding Tent (Neighbourhood Scale)",
+        category: "social",
+        occasion: "Wedding & community celebration",
+        dateLabel: "Any weekend (variable)",
+        materials: "Fabric canopies, decorative drapes, metal frames",
+        color: "Pastels with warm uplighting",
+        duration: "1–3 days",
+        themes: ["Aspiration", "Class signals", "Collective gathering"],
+        symbols: ["entrance arch", "stage backdrop", "table lighting patterns"],
+        lifecycle: {
+          before: "Before guests arrive, decoration design maps social hierarchy into layout and entry flow.",
+          during: "During the event, the tent performs hospitality—fabric and scale mediate intimacy and crowd visibility.",
+          dismantling: "After dismantling, household narratives persist while the built canopy fades from street memory."
+        },
+        tags: ["wedding","social","fabric","hospitality"],
+        lat: 28.5355,
+        lng: 77.3910,
+        gallery: [
+          { src: "images/wedding-1.jpg", cap: "Entrance arch & crowd choreography" },
+          { src: "images/wedding-2.jpg", cap: "Uplighting & fabric gradients" },
+          { src: "images/wedding-3.jpg", cap: "Backdrop as identity cue" }
+        ]
+      },
+      {
+        id: "site-03",
+        name: "Protest Stage (Public Visibility)",
+        category: "political",
+        occasion: "Rally / protest",
+        dateLabel: "Occasional civic cycles",
+        materials: "Metal truss, banners, loudspeakers, plywood platforms",
+        color: "High-contrast signage & factional palettes",
+        duration: "Hours to 2 days",
+        themes: ["Power", "Resistance", "Negotiation of space"],
+        symbols: ["banner slogans", "microphone lines", "front-row clustering"],
+        lifecycle: {
+          before: "Before the stage appears, silence is temporary—people reframe the street as a potential assembly space.",
+          during: "During action, architecture becomes an event system: visibility, acoustics, and movement converge.",
+          dismantling: "Once dismantled, the city returns to routine, but slogans remain as digital and oral memory."
+        },
+        tags: ["protest","political","visibility","banners"],
+        lat: 28.6139,
+        lng: 77.2090,
+        gallery: [
+          { src: "images/protest-1.jpg", cap: "Stage framing for visibility" },
+          { src: "images/protest-2.jpg", cap: "Banners as spatial arguments" },
+          { src: "images/protest-3.jpg", cap: "Crowd formation near speakers" }
+        ]
+      },
+      {
+        id: "site-04",
+        name: "Seasonal Festival Market (Pop-up Economy)",
+        category: "commercial",
+        occasion: "Festival markets / seasonal bazaars",
+        dateLabel: "Zonal seasonal cycles",
+        materials: "Temporary stalls, tarpaulin roofs, hanging signage",
+        color: "Market-bright: reds, greens, reflective trims",
+        duration: "Several days to weeks",
+        themes: ["Consumption rhythms", "Informal economies", "Urban circulation"],
+        symbols: ["price signage clusters", "route-driven stall layouts", "seasonal product colors"],
+        lifecycle: {
+          before: "Before crowds arrive, the marketplace defines a temporary geography of buying—routes, corners, and queues.",
+          during: "During peak trade, the market’s color logic and signage speed up circulation while creating local spectacle.",
+          dismantling: "After closure, the street relinquishes commercial structure, but footprints remain in stories and photos."
+        },
+        tags: ["market","commercial","signage","informal-economy"],
+        lat: 28.6560,
+        lng: 77.2340,
+        gallery: [
+          { src: "images/market-1.jpg", cap: "Signage clusters & navigation" },
+          { src: "images/market-2.jpg", cap: "Stall density & circulation" },
+          { src: "images/market-3.jpg", cap: "Reflective trims in evening" }
+        ]
+      }
+    ];
+
+    const CATEGORY_LABELS = {
+      all: "All",
+      religious: "Religious",
+      social: "Social",
+      political: "Political",
+      commercial: "Commercial"
+    };
+
+    const CATEGORY_COLOR = {
+      religious: "rgba(120,247,210,.75)",
+      social: "rgba(167,139,250,.75)",
+      political: "rgba(251,113,133,.75)",
+      commercial: "rgba(249,115,22,.75)"
+    };
+
+    /***********************
+     * DOM references
+     ***********************/
+    const searchInput = document.getElementById("searchInput");
+    const sitesGrid = document.getElementById("sitesGrid");
+    const resultCount = document.getElementById("resultCount");
+    const stageSlider = document.getElementById("stageSlider");
+    const stageValue = document.getElementById("stageValue");
+    const stageLabel = document.getElementById("stageLabel");
+    const mapCount = document.getElementById("mapCount");
+    const galleryGrid = document.getElementById("galleryGrid");
+    const galleryCount = document.getElementById("galleryCount");
+    const tagChips = document.getElementById("tagChips");
+    const modalOverlay = document.getElementById("modalOverlay");
+
+    const modalTitle = document.getElementById("modalTitle");
+    const modalSubtitle = document.getElementById("modalSubtitle");
+    const modalLifecycleText = document.getElementById("modalLifecycleText");
+    const modalType = document.getElementById("modalType");
+    const modalMaterials = document.getElementById("modalMaterials");
+    const modalColor = document.getElementById("modalColor");
+    const modalDuration = document.getElementById("modalDuration");
+    const modalCulturalText = document.getElementById("modalCulturalText");
+    const modalTags = document.getElementById("modalTags");
+    const modalCloseBtn = document.getElementById("modalCloseBtn");
+
+    const jumpToSitesBtn = document.getElementById("jumpToSitesBtn");
+    const randomPickBtn = document.getElementById("randomPickBtn");
+    const toggleGalleryBtn = document.getElementById("toggleGalleryBtn");
+
+    /***********************
+     * State
+     ***********************/
+    let activeCategory = "all";
+    let activeTag = "all";
+    let stage = parseFloat(stageSlider.value); // 0..1 (before..dismantle)
+    let activeModalSiteId = null;
+    let galleryVisible = true;
+
+    /***********************
+     * Map setup
+     ***********************/
+    const map = L.map('map', { zoomControl: true, scrollWheelZoom: false }).setView([28.6139, 77.2090], 11);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    // markers stored for updates
+    const markers = new Map();
+
+    function clearMarkers(){
+      for (const m of markers.values()) map.removeLayer(m);
+      markers.clear();
+    }
+
+    function addMarkers(filteredSites){
+      clearMarkers();
+      filteredSites.forEach(site => {
+        const color = CATEGORY_COLOR[site.category] || "rgba(255,255,255,.7)";
+        const marker = L.circleMarker([site.lat, site.lng], {
+          radius: 8,
+          color: color,
+          fillColor: color,
+          fillOpacity: 0.35,
+          weight: 2
+        }).addTo(map);
+
+        marker.bindPopup(`
+          <b>${escapeHtml(site.name)}</b><br/>
+          <span style="color:#d1d5db;">${escapeHtml(CATEGORY_LABELS[site.category] || site.category)} • ${escapeHtml(site.occasion)}</span>
+        `);
+
+        markers.set(site.id, marker);
+      });
+
+      mapCount.textContent = `${filteredSites.length} pins`;
+    }
+
+    /***********************
+     * Tag chips generation
+     ***********************/
+    function buildTagChips(){
+      const allTags = new Set();
+      SITES.forEach(s => s.tags.forEach(t => allTags.add(t)));
+      const tags = Array.from(allTags).sort((a,b)=>a.localeCompare(b));
+
+      tagChips.innerHTML = "";
+      const allChip = document.createElement("button");
+      allChip.className = "chip";
+      allChip.textContent = "All tags";
+      allChip.setAttribute("aria-pressed", activeTag === "all");
+      allChip.addEventListener("click", () => {
+        activeTag = "all";
+        refreshUI();
+      });
+      tagChips.appendChild(allChip);
+
+      tags.slice(0, 10).forEach(t => {
+        const chip = document.createElement("button");
+        chip.className = "chip";
+        chip.textContent = t.replace(/-/g," ");
+        chip.setAttribute("aria-pressed", activeTag === t);
+        chip.addEventListener("click", () => {
+          activeTag = (activeTag === t) ? "all" : t;
+          refreshUI();
+        });
+        tagChips.appendChild(chip);
+      });
+    }
+
+    /***********************
+     * Filtering
+     ***********************/
+    function matchesSearch(site, q){
+      if (!q) return true;
+      const hay = [
+        site.name, site.category, site.occasion, site.dateLabel,
+        site.materials, site.color, site.duration,
+        ...(site.themes || []),
+        ...(site.symbols || []),
+        ...(site.tags || [])
+      ].join(" ").toLowerCase();
+      return hay.includes(q.toLowerCase());
+    }
+
+    function filteredSites(){
+      const q = searchInput.value.trim().toLowerCase();
+      return SITES.filter(s => {
+        const catOk = activeCategory === "all" ? true : s.category === activeCategory;
+        const tagOk = activeTag === "all" ? true : (s.tags || []).includes(activeTag);
+        const searchOk = matchesSearch(s, q);
+        return catOk && tagOk && searchOk;
+      });
+    }
+
+    /***********************
+     * Rendering: site cards
+     ***********************/
+    function lifecycleSnippet(site, stage01){
+      // stage: 0..1 (before->during->dismantling)
+      if (stage01 < 0.33) return site.lifecycle.before;
+      if (stage01 < 0.66) return site.lifecycle.during;
+      return site.lifecycle.dismantling;
+    }
+
+    function culturalSnippet(site){
+      const themeLine = (site.themes || []).slice(0,3).join(" • ");
+      const sym = (site.symbols || []).slice(0,3).join(", ");
+      return `Themes: ${themeLine}. Symbols & visual cues: ${sym}.`;
+    }
+
+    function renderSites(){
+      const sites = filteredSites();
+      resultCount.textContent = `${sites.length} results`;
+      sitesGrid.innerHTML = "";
+
+      if (sites.length === 0){
+        const empty = document.createElement("div");
+        empty.className = "smallMuted";
+        empty.style.padding = "14px";
+        empty.textContent = "No entries match your filters. Try clearing search or selecting ‘All’.";
+        sitesGrid.appendChild(empty);
+        addMarkers([]);
+        renderGallery([]);
+        return;
+      }
+
+      addMarkers(sites);
+      sites.forEach(site => {
+        const card = document.createElement("div");
+        card.className = "siteCard";
+        card.tabIndex = 0;
+        card.setAttribute("role", "button");
+        card.setAttribute("aria-label", `Open details for ${site.name}`);
+        card.style.borderColor = "rgba(255,255,255,.10)";
+
+        const color = CATEGORY_COLOR[site.category] || "rgba(255,255,255,.7)";
+
+        card.innerHTML = `
+          <div class="siteTop">
+            <div>
+              <p class="siteName">${escapeHtml(site.name)}</p>
+              <p class="siteMeta">${escapeHtml(site.occasion)} • ${escapeHtml(site.dateLabel)}</p>
+            </div>
+            <div class="catTag" style="border-color: rgba(255,255,255,.14);">
+              <span style="display:inline-block;width:10px;height:10px;border-radius:999px;background:${color};box-shadow:0 0 0 5px rgba(255,255,255,.04);margin-right:8px;vertical-align:middle;"></span>
+              ${escapeHtml(CATEGORY_LABELS[site.category] || site.category)}
+            </div>
+          </div>
+
+          <div class="siteMeta" style="margin-top:10px;">
+            <b>Lifecycle reading:</b> ${escapeHtml(lifecycleSnippet(site, stage).slice(0, 110))}${site.lifecycle ? "…" : ""}
+          </div>
+
+          <div class="chips" style="margin-top:10px;">
+            ${(site.tags || []).slice(0,4).map(t => `<span class="chip" aria-pressed="false" style="cursor:default;">${escapeHtml(t.replace(/-/g," "))}</span>`).join("")}
+          </div>
+        `;
+
+        card.addEventListener("click", () => openModal(site));
+        card.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") openModal(site);
+        });
+
+        sitesGrid.appendChild(card);
+      });
+
+      renderGallery(sites);
+    }
+
+    /***********************
+     * Rendering: gallery
+     ***********************/
+    function renderGallery(sites){
+      galleryGrid.innerHTML = "";
+      const items = [];
+      sites.forEach(site => (site.gallery || []).forEach(g => items.push({ ...g, siteId: site.id, siteName: site.name, category: site.category })));
+      galleryCount.textContent = `${items.length} items`;
+
+      if (items.length === 0){
+        const empty = document.createElement("div");
+        empty.className = "smallMuted";
+        empty.style.padding = "14px";
+        empty.textContent = "Add gallery images to your site entries to populate this section.";
+        galleryGrid.appendChild(empty);
+        return;
+      }
+
+      // show first 9
+      items.slice(0, 9).forEach((it, idx) => {
+        const thumb = document.createElement("div");
+        thumb.className = "thumb";
+        thumb.tabIndex = 0;
+        thumb.setAttribute("role","button");
+        thumb.setAttribute("aria-label", `Open site details for ${it.siteName}`);
+
+        const placeholder = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(`
+          <svg xmlns="http://www.w3.org/2000/svg" width="900" height="600">
+            <defs>
+              <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#78F7D2" stop-opacity=".35"/>
+                <stop offset="1" stop-color="#A78BFA" stop-opacity=".22"/>
+              </linearGradient>
+            </defs>
+            <rect width="100%" height="100%" fill="#0B1330"/>
+            <rect x="40" y="40" width="820" height="520" rx="24" fill="url(#g)" stroke="rgba(255,255,255,.18)" />
+            <text x="60" y="110" fill="rgba(255,255,255,.92)" font-size="34" font-family="Inter, Arial" font-weight="800">Add your photo</text>
+            <text x="60" y="160" fill="rgba(255,255,255,.65)" font-size="20" font-family="Inter, Arial">/${idx+1} — ${it.siteName.replace(/&/g,'&amp;')}</text>
+          </svg>
+        `);
+
+        // Use provided src if not blank; otherwise placeholder.
+        const src = it.src && it.src.trim() ? it.src : placeholder;
+
+        thumb.innerHTML = `
+          <img alt="${escapeHtml(it.cap)}" src="${escapeHtml(src)}" loading="lazy" />
+          <div class="cap">${escapeHtml(it.cap)}</div>
+        `;
+
+        thumb.addEventListener("click", () => {
+          const site = SITES.find(s => s.id === it.siteId);
+          if (site) openModal(site);
+        });
+
+        thumb.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            const site = SITES.find(s => s.id === it.siteId);
+            if (site) openModal(site);
+          }
+        });
+
+        galleryGrid.appendChild(thumb);
+      });
+    }
+
+    /***********************
+     * Modal behavior
+     ***********************/
+    function openModal(site){
+      activeModalSiteId = site.id;
+
+      modalTitle.textContent = site.name;
+      modalSubtitle.textContent = `${CATEGORY_LABELS[site.category] || site.category} • ${site.dateLabel} • ${site.occasion}`;
+      modalLifecycleText.textContent = lifecycleSnippet(site, stage);
+      modalType.textContent = CATEGORY_LABELS[site.category] || site.category;
+      modalMaterials.textContent = site.materials || "—";
+      modalColor.textContent = site.color || "—";
+      modalDuration.textContent = site.duration || "—";
+
+      modalCulturalText.textContent =
+        `${culturalSnippet(site)}\n\n(Interpretive note) Temporary architecture is treated here as a cultural text: it stages identity, reorganizes movement, and negotiates public space.`;
+
+      modalTags.innerHTML = "";
+      (site.tags || []).forEach(t => {
+        const span = document.createElement("span");
+        span.className = "chip";
+        span.setAttribute("aria-pressed","false");
+        span.style.cursor = "default";
+        span.textContent = t.replace(/-/g," ");
+        modalTags.appendChild(span);
+      });
+
+      modalOverlay.setAttribute("aria-hidden","false");
+      // Focus close button
+      modalCloseBtn.focus();
+    }
+
+    function closeModal(){
+      activeModalSiteId = null;
+      modalOverlay.setAttribute("aria-hidden","true");
+    }
+
+    modalCloseBtn.addEventListener("click", closeModal);
+    modalOverlay.addEventListener("click", (e) => {
+      if (e.target === modalOverlay) closeModal();
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeModal();
+    });
+
+    // Update modal lifecycle text when slider changes
+    stageSlider.addEventListener("input", () => {
+      stage = parseFloat(stageSlider.value);
+      stageValue.textContent = stage.toFixed(2);
+
+      const label = stage < 0.33 ? "Before" : (stage < 0.66 ? "During" : "Dismantling");
+      stageLabel.textContent = label;
+
+      // refresh list & map & gallery
+      renderSites();
+
+      // if modal open, update its lifecycle text based on current stage
+      if (activeModalSiteId){
+        const site = SITES.find(s => s.id === activeModalSiteId);
+        if (site){
+          modalLifecycleText.textContent = lifecycleSnippet(site, stage);
+        }
+      }
+    });
+
+    /***********************
+     * Category pills
+     ***********************/
+    document.querySelectorAll(".pill").forEach(btn => {
+      btn.addEventListener("click", () => {
+        activeCategory = btn.dataset.cat;
+        document.querySelectorAll(".pill").forEach(b => b.setAttribute("aria-pressed", String(b === btn)));
+        // Update pressed state manually for non-direct click logic:
+        document.querySelectorAll(".pill").forEach(b => {
+          const cat = b.dataset.cat;
+          b.setAttribute("aria-pressed", String(cat === activeCategory));
+        });
+        refreshUI();
+      });
+    });
+
+    searchInput.addEventListener("input", () => refreshUI());
+
+    /***********************
+     * Buttons
+     ***********************/
+    jumpToSitesBtn.addEventListener("click", () => {
+      // Scroll to grid area
+      document.querySelector(".grid").scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+
+    randomPickBtn.addEventListener("click", () => {
+      const sites = filteredSites();
+      const pool = sites.length ? sites : SITES;
+      const pick = pool[Math.floor(Math.random() * pool.length)];
+      openModal(pick);
+    });
+
+    toggleGalleryBtn.addEventListener("click", () => {
+      galleryVisible = !galleryVisible;
+      document.querySelector(".card[style*='margin-top:14px']").style.display = galleryVisible ? "block" : "none";
+    });
+
+    /***********************
+     * Refresh UI
+     ***********************/
+    function refreshUI(){
+      buildTagChips(); // re-render tag chips based on current dataset
+      renderSites();
+      // update category pill pressed state based on activeCategory
+      document.querySelectorAll(".pill").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.cat === activeCategory)));
+      // update activeTag chips pressed states:
+      // (Chips are regenerated each time, so handled there)
+    }
+
+    /***********************
+     * Animated "Memory Layers" canvas
+     ***********************/
+    const canvas = document.getElementById("vizCanvas");
+    const ctx = canvas.getContext("2d");
+
+    function resizeCanvas(){
+      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = Math.floor(rect.width * dpr);
+      canvas.height = Math.floor(rect.height * dpr);
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+    }
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+
+    let t = 0;
+    function draw(){
+      const rect = canvas.getBoundingClientRect();
+      const w = rect.width, h = rect.height;
+      ctx.clearRect(0,0,w,h);
+
+      // Background fog
+      const grad = ctx.createRadialGradient(w*0.5, h*0.2, 10, w*0.5, h*0.5, Math.max(w,h)*0.9);
+      grad.addColorStop(0, "rgba(120,247,210,.10)");
+      grad.addColorStop(0.45, "rgba(167,139,250,.08)");
+      grad.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0,0,w,h);
+
+      // Stage influences opacity and number of layers
+      const phase = stage; // 0..1
+      const layerCount = Math.round(3 + phase * 5); // 3..8
+      const baseAlpha = 0.18 + phase * 0.20;
+
+      for (let i=0;i<layerCount;i++){
+        const p = i/(layerCount-1 || 1);
+        const y = h*(0.2 + p*0.7);
+        const wobble = Math.sin(t*0.9 + p*6.2) * (8 + phase*10);
+
+        const opacity = baseAlpha * (1 - p*0.65);
+        const c1 = (i%2===0) ? "120,247,210" : "167,139,250";
+        const c2 = (i%3===0) ? "249,115,22" : "251,113,133";
+
+        ctx.globalAlpha = opacity;
+        ctx.strokeStyle = `rgba(${c1}, ${0.7})`;
+        ctx.lineWidth = 2;
+
+        // Layer shape: arc bands
+        ctx.beginPath();
+        const x0 = w*0.08 + p*12;
+        const x1 = w*0.92 - p*12;
+        const mid = (x0+x1)/2;
+        const amp = (20 + p*30) * (0.5 + phase);
+        ctx.moveTo(x0, y);
+        for (let s=0;s<=24;s++){
+          const xx = x0 + (x1-x0)*(s/24);
+          const ss = s/24;
+          const yy = y + Math.sin(ss*Math.PI)*amp*0.06 + wobble*0.02 + Math.cos((t*0.7)+ss*6+p*2)*amp*0.03;
+          ctx.lineTo(xx, yy);
+        }
+        ctx.stroke();
+
+        // Faded second stroke for richness
+        ctx.globalAlpha = opacity*0.7;
+        ctx.strokeStyle = `rgba(${c2}, ${0.55})`;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(w*0.1 + p*10, y+10);
+        ctx.lineTo(w*0.9 - p*10, y+10 + Math.sin(t+p*2)*8);
+        ctx.stroke();
+      }
+
+      // Textual “ghost” timestamps
+      ctx.globalAlpha = 1;
+      const label = stage < 0.33 ? "BEFORE" : (stage < 0.66 ? "DURING" : "DISMANTLING");
+      ctx.fillStyle = "rgba(255,255,255,.82)";
+      ctx.font = "900 12px Inter, system-ui, sans-serif";
+      ctx.fillText(label + " • " + stage.toFixed(2), 14, h - 14);
+
+      // Memory decay streaks (simulate disappearance)
+      const streaks = 18;
+      for (let i=0;i<streaks;i++){
+        const p = i/(streaks-1);
+        const x = w*(0.1 + p*0.8) + Math.sin(t*0.6 + i)*10;
+        const len = (8 + (1-p)*18) * (0.35 + (1-stage)*0.9);
+        const alpha = (1-stage) * 0.18 + 0.02;
+        ctx.globalAlpha = alpha;
+        ctx.strokeStyle = "rgba(255,255,255,.85)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(x, h*0.12 + Math.sin(t*0.9 + i)*10);
+        ctx.lineTo(x + len*0.12, h*0.12 + len*0.85);
+        ctx.stroke();
+      }
+
+      ctx.globalAlpha = 1;
+      t += 0.016;
+      requestAnimationFrame(draw);
+    }
+    requestAnimationFrame(draw);
+
+    /***********************
+     * Utilities
+     ***********************/
+    function escapeHtml(str){
+      return String(str ?? "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    /***********************
+     * Init
+     ***********************/
+    function init(){
+      // Initialize stage labels
+      stageValue.textContent = stage.toFixed(2);
+      stageLabel.textContent = stage < 0.33 ? "Before" : (stage < 0.66 ? "During" : "Dismantling");
+
+      buildTagChips();
+      renderSites();
+
+      // default category pill state
+      document.querySelectorAll(".pill").forEach(b => {
+        b.setAttribute("aria-pressed", String(b.dataset.cat === activeCategory));
+      });
+    }
+
+    init();
+  </script>
 </body>
 </html>
