@@ -1,30 +1,131 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Ephemeral Delhi</title>
-<link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ephemeral Delhi | Digital Humanities Archive</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-
 <body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <i class="fas fa-layer-group"></i>
+                <span>Ephemeral Delhi</span>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html" class="nav-link active">Home</a></li>
+                <li><a href="about.html" class="nav-link">About</a></li>
+                <li><a href="archive.html" class="nav-link">Archive</a></li>
+                <li><a href="analysis.html" class="nav-link">Analysis</a></li>
+                <li><a href="contact.html" class="nav-link">Contact</a></li>
+            </ul>
+            <div class="hamburger">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
 
-<nav>
-<a href="index.html">Home</a>
-<a href="gallery.html">Gallery</a>
-<a href="map.html">Map</a>
-<a href="methodology.html">Methodology</a>
-</nav>
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-bg"></div>
+        <div class="hero-container">
+            <div class="hero-content">
+                <h1 class="hero-title">
+                    <span class="hindi-text">नश्वर दिल्ली</span><br>
+                    <span class="english-text">Ephemeral Delhi</span>
+                </h1>
+                <p class="hero-subtitle">
+                    A Digital Humanities Archive of<br>
+                    <span class="highlight">Temporary Architecture</span>
+                </p>
+                <div class="hero-buttons">
+                    <a href="archive.html" class="btn btn-primary">
+                        <i class="fas fa-archive"></i> Explore Archive
+                    </a>
+                    <a href="about.html" class="btn btn-secondary">
+                        <i class="fas fa-info-circle"></i> Learn More
+                    </a>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="floating-structure">
+                    <div class="structure-layer layer-1"></div>
+                    <div class="structure-layer layer-2"></div>
+                    <div class="structure-layer layer-3"></div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-<section>
-<h1>Ephemeral Delhi</h1>
-<p>Temporary Architecture as Cultural Performance</p>
+    <!-- Core Idea Section -->
+    <section class="core-idea">
+        <div class="container">
+            <h2 class="section-title">💡 Core Idea</h2>
+            <div class="idea-content">
+                <div class="idea-text">
+                    <p>This project documents and analyzes <strong>temporary structures</strong> in Delhi—spaces that <em>appear, transform the city for a short time, and then disappear</em>.</p>
+                    <div class="features-grid">
+                        <div class="feature">
+                            <i class="fas fa-bolt"></i>
+                            <span>Built quickly</span>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-star"></i>
+                            <span>Highly symbolic</span>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-heart"></i>
+                            <span>Deeply cultural</span>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-archive"></i>
+                            <span>Rarely archived</span>
+                        </div>
+                    </div>
+                    <p class="treats-as">The project treats them as <strong>cultural texts</strong> rather than just physical structures.</p>
+                </div>
+                <div class="idea-visual">
+                    <div class="timeline-visual">
+                        <div class="timeline-item appear"><i class="fas fa-magic"></i></div>
+                        <div class="timeline-item transform"><i class="fas fa-sync-alt"></i></div>
+                        <div class="timeline-item disappear"><i class="fas fa-dissolve"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-<div class="card">
-<p>
-This project explores temporary structures in Delhi—pandals, tents, protest stages—
-as cultural texts that reshape urban space and memory.
-</p>
-</div>
-</section>
+    <!-- Research Questions -->
+    <section class="questions">
+        <div class="container">
+            <h2 class="section-title">🎯 Research Questions</h2>
+            <div class="questions-grid">
+                <div class="question-card">
+                    <div class="question-number">01</div>
+                    <p>How does temporary architecture reflect Delhi's cultural, religious, and political life?</p>
+                </div>
+                <div class="question-card">
+                    <div class="question-number">02</div>
+                    <p>What meanings are embedded in design, color, and materials?</p>
+                </div>
+                <div class="question-card">
+                    <div class="question-number">03</div>
+                    <p>How do these structures reshape public space temporarily?</p>
+                </div>
+                <div class="question-card">
+                    <div class="question-number">04</div>
+                    <p>What happens to cultural memory once these structures are dismantled?</p>
+                </div>
+            </div>
+        </div>
+    </section>
 
+    <script src="script.js"></script>
 </body>
 </html>
